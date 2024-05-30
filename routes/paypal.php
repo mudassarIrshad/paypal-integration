@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PayPalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('payment', 'PayPalController@payment')->name('payment');
-Route::get('cancel', 'PayPalController@cancel')->name('payment.cancel');
-Route::get('payment/success', 'PayPalController@success')->name('payment.success');
+Route::group(['prefix' => 'v1/'], function () {
+    Route::get('payment', [PayPalController::class, 'payment'])->name('payment');
+    Route::get('cancel', [PayPalController::class, 'cancel'])->name('payment.cancel');
+    Route::get('payment/success', [PayPalController::class, 'success'])->name('payment.success');
+});
