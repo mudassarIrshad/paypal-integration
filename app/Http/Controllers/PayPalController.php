@@ -3,64 +3,50 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Srmklive\PayPal\Services\PayPal;
-//use Srmklive\PayPal\Services\PayPal;
+use Srmklive\PayPal\Services\ExpressCheckout;
 
 class PayPalController extends Controller
 {
-    protected $paypal;
+    public $provider;
 
-    public function __construct(PayPal $paypal)
+    public function __construct()
     {
-        $this->paypal = $paypal;
+        $this->provider = new ExpressCheckout;
     }
 
     public function payment()
     {
-        $data = [
-            'items' => [
-                [
-                    'name' => 'Product Name',
-                    'price' => 10,
-                    'qty' => 1,
-                ]
-            ],
-            'invoice_id' => uniqid(),
-            // Define $data['invoice_description'] here
-            'return_url' => route('payment.success'),
-            'cancel_url' => route('payment.success'),
-            'total' => 10,
+        $data = [];
+        $data['items'] = [
+            [
+                'name' => 'test',
+                'price' => 100,
+                'desc'  => 'test description',
+                'qty' => 1
+            ]
         ];
 
-// Now you can reference $data['invoice_id'] within $data['invoice_description']
+        $data['invoice_id'] = 1;
         $data['invoice_description'] = "Order #{$data['invoice_id']} Invoice";
-        $provider = PayPal::setProvider();
-        $provider->setApiCredentials(config('paypal'));
-        $token = $provider->getAccessToken();
-        $provider->setAccessToken($token);
-//        PayPal::setProvider();
-//        $paypalProvider = PayPal::getProvider();
-//        $paypalProvider->setApiCredentials(config('paypal'));
-//        $paypalProvider->setAccessToken($paypalProvider->getAccessToken());
-//        $response = $this->paypal->setExpressCheckout($data);
-//        return redirect($response['paypal_link']);
+        $data['return_url'] = route('payment.success');
+        $data['cancel_url'] = route('payment.cancel');
+        $data['total'] = 100;
+
+        $response =  $this->provider->setExpressCheckout($data);
+
+        $response =  $this->provider->setExpressCheckout($data, true);
+
+        return redirect($response['paypal_link']);
     }
 
     public function status(Request $request)
     {
-        $token = $request->get('token');
-        $payerId = $request->get('PayerID');
+        $response =  $this->provider->getExpressCheckoutDetails($request->token);
 
-        $response = $this->paypal->getExpressCheckoutDetails($token);
-
-        if ($response['ACK'] === 'Success') {
-            // Payment was successful, process it
-            // Implement your logic here
-            return 'Payment Successful';
-        } else {
-            // Payment failed or was canceled
-            // Implement your logic here
-            return 'Payment Failed';
+        if (in_array(strtoupper($response['ACK']), ['SUCCESS', 'SUCCESSWITHWARNING'])) {
+            dd('Your payment was successfully. You can create success page here.');
         }
+
+        dd('Something is wrong.');
     }
 }
