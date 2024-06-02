@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['prefix' => 'v1/'], function () {
-    Route::get('payment', [PayPalController::class, 'payment'])->name('payment');
-    Route::get('cancel', [PayPalController::class, 'cancel'])->name('payment.cancel');
-    Route::get('payment/success', [PayPalController::class, 'success'])->name('payment.success');
+    Route::get('handle-payment', [PayPalController::class, 'handlePayment'])->name('make.payment');
+    Route::get('cancel-payment', [PayPalController::class, 'paymentCancel'])->name('cancel.payment');
+    Route::get('payment-success', [PayPalController::class, 'paymentSuccess'])->name('success.payment');
 });
