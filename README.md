@@ -1,1 +1,2 @@
-- run composer install
+-- run composer install
+-- php artisan serve to run the project
