@@ -37,7 +37,6 @@ class PayPalController extends Controller
         $res = $paypalModule->setExpressCheckout($product, true);
 
         return $this->paymentSuccess($request);
-        // test data
     }
 
 
