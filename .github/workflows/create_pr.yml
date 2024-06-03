@@ -1,0 +1,63 @@
+name: CI
+
+# Create Pull Request on Commit
+on:
+  push:
+    branches: [ "basic-paypal-apis" ]
+  workflow_dispatch:
+
+jobs:
+  create_pull_request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      - name: Install Octokit
+        run: npm install @octokit/rest
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
+        run: |
+          node -e "
+          const { Octokit } = require('@octokit/rest');
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+          const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
+          (async () => {
+            try {
+              const prs = await octokit.pulls.list({
+                owner,
+                repo,
+                head: 'basic-paypal-apis',
+                state: 'open'
+              });
+
+              if (prs.data.length === 0) {
+                const pr = await octokit.pulls.create({
+                  owner,
+                  repo,
+                  title: 'Automated PR from GitHub Action',
+                  head: 'basic-paypal-apis',  # Branch you want to merge from
+                  base: 'main',  # Branch you want to merge into
+                  body: 'This PR was automatically created by a GitHub Action.',
+                });
+
+                console.log(`Pull request created: ${pr.data.html_url}`);
+              } else {
+                console.log('An open pull request already exists.');
+              }
+            } catch (error) {
+              console.error(`Failed to create pull request: ${error.message}`);
+              process.exit(1);
+            }
+          })();
+          "
