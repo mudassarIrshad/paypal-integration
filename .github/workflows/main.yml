@@ -1,0 +1,42 @@
+name: Create Pull Request on Commit
+
+on:
+  push:
+    branches:
+      - basic-paypal-apis  # Change this to the branch you want to monitor for commits
+
+jobs:
+  create_pull_request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install -g @actions/github-script
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          node -e "
+          const { Octokit } = require('@octokit/rest');
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+          const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
+          octokit.pulls.create({
+            owner,
+            repo,
+            title: 'Automated PR from GitHub Action',
+            head: 'basic-paypal-apis',  # Branch you want to merge from
+            base: 'main',  # Branch you want to merge into
+            body: 'This PR was automatically created by a GitHub Action.'
+          });
+          "
